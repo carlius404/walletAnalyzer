@@ -6,7 +6,7 @@ from web3 import Web3
 
 load_dotenv()
 scanKey = os.getenv('BSCSCAN_KEY')
-web3 = Web3(Web3.HTTPProvider('https://bsc-dataseed.binance.org/'))
+web3 = Web3(Web3.HTTPProvider('https://bscrpc.com'))
 stableCoins=["0x55d398326f99059ff775485246999027b3197955","0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c","0xe9e7cea3dedca5984780bafc599bd69add087d56"]
 def getTxs(address):
     url=f'https://api.bscscan.com/api?module=account&action=txlist&address={address}&startblock=0&endblock=99999999&sort=asc&apiKey={scanKey}'
@@ -38,26 +38,9 @@ def getAbi(address):
         print(f"WARNING: more than one contract was returned from {address} ({len(res)})")
     return res[0]['ABI']
 
-def getPrice(address,txHash):
-    logs=web3.eth.get_transaction_receipt(txHash).logs
+def getContract(address):
     abi=getAbi(address)
     contract=web3.eth.contract(address, abi=abi)
-
-    #recognize which one of the two tokens is the stable coin, 
-    #so we can determine the price of the token compared to the stable coin
-
-    token0=contract.functions.token0().call()
-    token1=contract.functions.token1().call()
-    
-    if token0.lower() in stableCoins:
-        stable=0
-        token=1
-    if token1.lower() in stableCoins:
-        stable=1
-        token=0
-    
-    #create a dict that maps all the events signature to the name of the event
-
     hexToName={}
     for abi in contract.abi:
         if abi["type"] == "event":
@@ -68,22 +51,17 @@ def getPrice(address,txHash):
             signatureText=f"{name}({inputs})"
             signatureHex=web3.toHex(web3.keccak(text=signatureText))
             hexToName[signatureHex[:10]]=name
-    buyPrices=[]
-    sellPrices=[]
-    for log in logs:
-        if log['address'].lower()==address.lower():
-            topic0=log['topics'][0].hex()
-            topic0=topic0[:10]
-            if topic0=="0xd78ad95f": #if the topic0 has the signature of the swap event
-                    decodedLogs=contract.events[hexToName[topic0]]().processLog(log)
-                    stableIn=decodedLogs['args'][f'amount{stable}In']
-                    stableOut=decodedLogs['args'][f'amount{stable}Out']
-                    tokenIn=decodedLogs['args'][f'amount{token}In']
-                    tokenOut=decodedLogs['args'][f'amount{token}Out']
-                    if stableIn!=0:
-                        buyPrices.append(stableIn/tokenOut)
-                    else:
-                        sellPrices.append(stableOut/tokenIn)
-    return buyPrices,sellPrices
+    return contract, hexToName
 
-                    
+def recognizeStable(contract):
+    token0=contract.functions.token0().call()
+    token1=contract.functions.token1().call()
+    
+    if token0.lower() in stableCoins:
+        stable=0
+        token=1
+    if token1.lower() in stableCoins:
+        stable=1
+        token=0
+    return stable,token
+        
