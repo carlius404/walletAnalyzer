@@ -2,10 +2,17 @@ from getDataBsc import *
 from web3 import Web3
 import matplotlib.pyplot as plt
 import time
-def swapValues(logs):
+
+def getPairs(fromBlock, toBlock): 
+
+    pancakeFactory2="0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73"
+    contract,hexToName=getContract(pancakeFactory2)
+    print(hexToName)
+    logs=contract.events.PairCreated.getLogs(fromBlock=fromBlock, toBlock=toBlock)
+    pairs=[]
     for log in logs:
-        for k in log:
-            print(1)   
+        pairs.append(log['pair'])
+
 def getPrices(pairAddress):
     contract,hexToName=getContract(pairAddress)
     stable,token=recognizeStable(contract)
@@ -37,23 +44,5 @@ def getPrices(pairAddress):
     print(buyPrices[-1])
     plt.plot(buyPrices)
     plt.show()
-    #txs=getTokenTxs(pairAddress)
-    #buyPrices=[]
-    #sellPrices=[]
-    #swapData=[]
-    #doneTxs=[]
-    #lenn=len(txs)
-    #n=0
-    #for tx in txs:
-    #    n+=1
-    #    print(n/lenn)
-    #    if tx['hash'] not in doneTxs:
-    #        start=time.time()
-    #        doneTxs.append(tx['hash'])
-    #        data=getSwapLogs(tx['hash'],pairAddress)
-    #        swapData+=data
-    #        if len(data)>0:
-    #            
-    #            decodedLogs=contract.events[hexToName["0xd78ad95f"]]().processLog(data[0])
-    #        print(time.time()-start)
-getPrices("0xeA8DE07b2129870cB382E48de95423bb66A616ec")
+#getPrices("0xeA8DE07b2129870cB382E48de95423bb66A616ec")
+getPairs(28406893-10, 28406893+10)
