@@ -13,6 +13,15 @@ def getPairs(fromBlock, toBlock):
     for log in logs:
         pairs.append(log['pair'])
 
+def getAddLiquidity(fromBlock, toBlock):
+    print(12)
+    pancakeFactory2="0x10ED43C718714eb63d5aA57B78B54704E256024E"
+    contract,hexToName=getContract(pancakeFactory2)
+    print(contract.events)
+    logs=contract.functions.addLiquidity.getLogs(fromBlock=fromBlock, toBlock=toBlock)
+    pairs=[]
+    for log in logs:
+        pairs.append(log['pair'])
 def getPrices(pairAddress):
     contract,hexToName=getContract(pairAddress)
     stable,token=recognizeStable(contract)
@@ -45,4 +54,4 @@ def getPrices(pairAddress):
     plt.plot(buyPrices)
     plt.show()
 #getPrices("0xeA8DE07b2129870cB382E48de95423bb66A616ec")
-getPairs(28406893-10, 28406893+10)
+getAddLiquidity(-10, 28448421+10)
