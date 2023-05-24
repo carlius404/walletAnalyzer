@@ -8,12 +8,11 @@ load_dotenv()
 scanKey = os.getenv('BSCSCAN_KEY')
 web3 = Web3(Web3.HTTPProvider('https://bscrpc.com'))
 stableCoins=["0x55d398326f99059ff775485246999027b3197955","0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c","0xe9e7cea3dedca5984780bafc599bd69add087d56"]
-def getTxs(address):
-    url=f'https://api.bscscan.com/api?module=account&action=txlist&address={address}&startblock=0&endblock=99999999&sort=asc&apiKey={scanKey}'
-    res=requests.get(url)
-    res=json.loads(res.text)
-    res=res['result']
-    return res
+
+def getTxs(address,fromBlock,ToBlock):
+    txs = web3.eth.getTransactionsByAddress(address=address,startBlock=fromBlock,endBlock=ToBlock)
+    return txs
+
 
 def getTokenTxs(address):
     url=f'https://api.bscscan.com/api?module=account&action=tokentx&address={address}&sort=asc&apikey={scanKey}'

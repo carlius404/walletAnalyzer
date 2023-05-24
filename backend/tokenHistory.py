@@ -4,24 +4,27 @@ import matplotlib.pyplot as plt
 import time
 
 def getPairs(fromBlock, toBlock): 
-
     pancakeFactory2="0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73"
     contract,hexToName=getContract(pancakeFactory2)
-    print(hexToName)
     logs=contract.events.PairCreated.getLogs(fromBlock=fromBlock, toBlock=toBlock)
     pairs=[]
     for log in logs:
-        pairs.append(log['pair'])
+        pairs.append(log['args']['pair'])
+    return pairs
 
-def getAddLiquidity(fromBlock, toBlock):
-    print(12)
-    pancakeFactory2="0x10ED43C718714eb63d5aA57B78B54704E256024E"
-    contract,hexToName=getContract(pancakeFactory2)
-    print(contract.events)
-    logs=contract.functions.addLiquidity.getLogs(fromBlock=fromBlock, toBlock=toBlock)
-    pairs=[]
+def getPooled(pairAddress):
+    contract,hexToName=getContract(pairAddress)
+    stable,token=recognizeStable(contract)
+    txs=getTokenTxs(pairAddress)
+
+    fromBlock=int(txs[0]['blockNumber'])
+    logs=contract.events.Mint.getLogs(fromBlock=fromBlock-20, toBlock=fromBlock+20)
     for log in logs:
-        pairs.append(log['pair'])
+        print(log)
+        amountStable=log['args'][f'amount{stable}']
+        amountToken=log['args'][f'amount{token}']
+        print(amountStable,amountToken)
+
 def getPrices(pairAddress):
     contract,hexToName=getContract(pairAddress)
     stable,token=recognizeStable(contract)
@@ -54,4 +57,8 @@ def getPrices(pairAddress):
     plt.plot(buyPrices)
     plt.show()
 #getPrices("0xeA8DE07b2129870cB382E48de95423bb66A616ec")
-getAddLiquidity(-10, 28448421+10)
+#getAddLiquidity(28448421-10, 28448421+10)
+pairs=getPairs(28483284-50,28483284+50)
+for pair in pairs:
+    print(pair)
+    getPooled(pair)
